@@ -31,7 +31,6 @@ Example
     >>> library_dirs = s.get_library_dirs()
 """
 import os
-import platform
 import struct
 from os.path import exists, join
 from sysconfig import get_config_var
