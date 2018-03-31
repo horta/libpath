@@ -1,13 +1,49 @@
+"""
+libpath
+=======
+
+Common path resolution for library and header files.
+
+For instance, in Windows, the environment variable ``INCLUDE``, if exists,
+is used to retrieve directories for header inclusion.
+In Unix systems, ``/usr/local/lib`` is often used to store libraries.
+In Windows, a library named ``z`` might exist under the name of ``libz``.
+This module is a helper for handling those issues.
+
+Example
+-------
+
+    >>> import platform
+    >>> from os.path import join
+    >>> from libpath import Windows, Unix
+    >>>
+    >>> if platform.system() == 'Windows':
+    >>>     s = Windows()
+    >>>     f = s.get_programfiles()
+    >>>     s.add_library_dir(join(f, 'zstd', 'lib'))
+    >>>     s.add_include_dir(join(f, 'zstd', 'include'))
+    >>>     libs = [s.find_libname('zstd')]
+    >>> else:
+    >>>     s = Unix()
+    >>>     libs = ['zstd']
+    >>>
+    >>> include_dirs = s.get_include_dirs()
+    >>> library_dirs = s.get_library_dirs()
+"""
 import os
 import platform
-from os.path import join, exists
-from sysconfig import get_config_var
 import struct
+from os.path import exists, join
+from sysconfig import get_config_var
 
 __version__ = "0.0.1"
 
 
 def bits_arch():
+    """Determines the number of bits of the Python process.
+
+        Return ``32`` or ``64``.
+    """
     return struct.calcsize("P") * 8
 
 
@@ -73,6 +109,7 @@ class Windows(System):
         return self._library_dirs + dirs
 
     def find_libname(self, name):
+        """Try to infer the correct library name."""
         names = ["{}.lib", "lib{}.lib", "{}lib.lib"]
         names = [n.format(name) for n in names]
         dirs = self.get_library_dirs()
@@ -116,15 +153,3 @@ class Unix(System):
         msg += "Include dirs: {}\n".format(self.get_include_dirs())
         msg += "Library dirs: {}\n".format(self.get_library_dirs())
         return msg
-
-
-if __name__ == "__main__":
-    if platform.system() == 'Windows':
-        w = Windows()
-        pf = w.get_programfiles()
-        w.add_library_dir(join(pf, 'zstd', 'lib'))
-        w.add_include_dir(join(pf, 'zstd', 'include'))
-        print(w)
-        print(w.find_libname('zstd'))
-    else:
-        print(Unix())
